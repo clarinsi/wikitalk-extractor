@@ -5,8 +5,8 @@ This script was written as part of the JANES project (http://nl.ijs.si/janes/eng
 
 The script has two dependencies:
 
-* lxml
-* langid.py
+* lxml (https://pypi.python.org/pypi/lxml)
+* langid (https://pypi.python.org/pypi/langid)
 
 The extractor works with the "meta" Wikipedia dump, the Slovene one being http://dumps.wikimedia.org/slwiki/latest/slwiki-latest-pages-meta-current.xml.bz2.
 

@@ -1,20 +1,25 @@
 #!/usr/bin/python
+#-*-coding:utf8-*-
 # Usage: ./extract_talk.py [ispagetalk|isusertalk] < in > out
-# page talk <page><ns>1</ns><text xml:space="preserve">.+</text>
-
-# user talk <page><ns>3</ns><text>.+
+# page talk <page><ns>1</ns></page>
+# user talk <page><ns>3</ns></page>
 
 import langid
 import sys
 import re
 from lxml import etree
 
-lang='sl'
+try:
+    lang=sys.argv[2]
+except:
+    lang='sr'
 
 lexicon={'sl':
         {'user_tag':'Uporabnik'},
         'hr':
-        {'user_tag':'Suradnik'}
+        {'user_tag':'Suradnik'},
+        'sr':
+        {'user_tag':u'Корисник'}
         }
 
 xmlroot=etree.Element('wikipedia',id="janes.wikipedia."+sys.argv[1])
@@ -45,11 +50,9 @@ for line in sys.stdin:
                 topicid=0
                 title=title_re.search(page).group(1)
                 #print 'title',repr(title)
-                xmlpage=etree.Element('page',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8),title=title,url='https://'+lang+'.wikipedia.org/wiki/'+title.replace(' ','_'))
+                xmlpage=etree.Element('page',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8),title=title,url='https://'+lang+'.wikipedia.org/wiki/'+title.replace(' ','_'))
                 xmlroot.append(xmlpage)
                 text=pattern.group(1)
-                #sys.stdout.write('<page title="'+title+'">\n')
-                #sys.stdout.write(text)
                 text=doublepar_re.sub('',smiley_re.sub(r'<smiley type="\1"/>',text))
                 pars=[]
                 for line in text.split('\n'):
@@ -63,62 +66,50 @@ for line in sys.stdin:
                     if line.startswith('==') and line.endswith('=='):
                         if len(pars)>0:
                             commentid+=1
-                            xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
+                            xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
                             currenttopic.append(xmlcomment)
                             for par in pars:
                                 try:
                                     xmlcomment.append(etree.fromstring('<p>'+par+'</p>'))
                                 except:
                                     pass
-                                    #print 'error',par
                             pars=[]                            
                         topicid+=1
                         commentid=0
-                        xmltopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8),title=link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',line.strip('= '))))
+                        xmltopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8),title=link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',line.strip('= '))))
                         xmlpage.append(xmltopic)
                         currenttopic=xmltopic
                         continue
-                        #'<subtitle>'+link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',line.strip('= ')))+'</subtitle>\n'
                     if line.strip()!='':
                         if currenttopic==None:
                             topicid+=1
                             commentid=0
-                            currenttopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8))
+                            currenttopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8))
                             xmlpage.append(currenttopic)
-                        #try:
                         text=multiplequotes_re.sub('',link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',user2_re.sub(r'<user name="\1">\1</user>',user_re.sub(r'<user name="\1">\2</user>',format_re.sub('',line))))))
-                        #except:
-                        #    print 'error',text
                         if text.strip()=='':
                             continue
-                        #xmlp=etree.Element('p',lang=langid.classify(text)[0])
-                        #print 'line',repr(text)
                         pars.append(text)
                         if '<user ' in text:
                             commentid+=1
-                            xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
+                            xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
                             currenttopic.append(xmlcomment)
                             for par in pars:
                                 try:
                                     xmlcomment.append(etree.fromstring('<p>'+par+'</p>'))
                                 except:
                                     pass
-                                    #print 'error',par
                             pars=[]
-                        #xmlp.text=etree.fromstring('<p>'+text+'</p>')
-                        #xmlcomment.append(etree.fromstring('<p>'+text+'</p>'))
-                        #xmlcomment.append(xmlp)
                 if len(pars)>0:
                     commentid+=1
-                    xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
+                    xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
                     currenttopic.append(xmlcomment)
                     for par in pars:
                         try:
                             xmlcomment.append(etree.fromstring('<p>'+par+'</p>'))
                         except:
-                            'error',par
+                            pass
                     pars=[]                            
-                #print etree.tostring(xmlroot,pretty_print=True,xml_declaration=True,encoding='UTF-8')
         ispage=False
         ispagetalk=False
         isusertalk=False
