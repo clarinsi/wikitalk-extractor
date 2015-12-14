@@ -4,33 +4,20 @@
 
 # user talk <page><ns>3</ns><text>.+
 
-def clean(line):
-    user_re=re.compile(r'\[\[Uporabnik:(.+?)\|(.+?)\]\]')
-    link_re=re.compile(r'\[\[([^\]]+?)\|(.+?)\]\]')
-    link2_re=re.compile(r'\[\[(.+?)\]\]')
-    format_re=re.compile(r'&lt;.+?&gt;')
-    multiplequotes_re=re.compile(r'\'{2,}')
-    if line.startswith('==') and line.endswith('=='):
-        topicid+=1
-        xmltopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8))
-        return xmltopic
-        #'<subtitle>'+link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',line.strip('= ')))+'</subtitle>\n'
-    if line.strip()!='':
-        text=multiplequotes_re.sub('',format_re.sub('',link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',user_re.sub(r'<user name="\1">\2</user>',line)))))
-        return '<p lang="'+langid.classify(text)[0]+'">'+text+'</p>\n'
-
 import langid
 import sys
 import re
 from lxml import etree
 
 lang='sl'
+
 lexicon={'sl':
-        {'user_tag':'Uporabnik',
-        'talk_tag':'Pogovor'}
+        {'user_tag':'Uporabnik'},
+        'hr':
+        {'user_tag':'Suradnik'}
         }
 
-xmlroot=etree.Element('wikipedia',id="janes.wikipedia."+sys.argv[1][2:])
+xmlroot=etree.Element('wikipedia',id="janes.wikipedia."+sys.argv[1])
 
 text_re=re.compile(r'<text xml:space="preserve">(.+?)</text>',re.DOTALL)
 title_re=re.compile(r'<title>(.+?)</title>')
@@ -40,13 +27,16 @@ div_re=re.compile(r'&lt;div.+&lt;/div&gt;',re.DOTALL)
 ispage=False
 ispagetalk=False
 isusertalk=False
+if sys.argv[1] not in ['pagetalk','usertalk']:
+    sys.stderr.write('Wrong first argument (pagetalk|usertalk)\n')
+    sys.exit(1)
 articleid=0
 for line in sys.stdin:
     if line.strip()=='<page>':
         ispage=True
         page=''
     elif line.strip()=='</page>':
-        if eval(sys.argv[1]):
+        if eval('is'+sys.argv[1]):
             page=div_re.sub(' ',page.decode('utf8'))
             currenttopic=None
             pattern=text_re.search(page)
@@ -104,7 +94,7 @@ for line in sys.stdin:
                         #xmlp=etree.Element('p',lang=langid.classify(text)[0])
                         #print 'line',repr(text)
                         pars.append(text)
-                        if '<a href="User' in text:
+                        if '<user ' in text:
                             commentid+=1
                             xmlcomment=etree.Element('comment',id='janes.wikipedia.'+sys.argv[1][2:]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8)+'.'+str(commentid).zfill(8),lang=langid.classify(' '.join(pars))[0])
                             currenttopic.append(xmlcomment)
