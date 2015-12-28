@@ -18,7 +18,7 @@ The XML dump is read from the standard input. The resulting XML structure is wri
 
 Examples of running the script are:
 
-$ bunzip2 -c slwiki-latest-pages-meta-current.xml.bz2 | ./wikitalk-extractor.py pagetalk | gzip -c > slwiki.pagetalk.gz
+$ bunzip2 -c slwiki-latest-pages-meta-current.xml.bz2 | ./wikitalk-extractor.py pagetalk sl | gzip -c > slwiki.pagetalk.gz
 
-$ bunzip2 -c slwiki-latest-pages-meta-current.xml.bz2 | ./wikitalk-extractor.py usertalk | gzip -c > slwiki.usertalk.gz
+$ bunzip2 -c slwiki-latest-pages-meta-current.xml.bz2 | ./wikitalk-extractor.py usertalk sl | gzip -c > slwiki.usertalk.gz
 
