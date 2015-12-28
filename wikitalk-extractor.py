@@ -49,7 +49,6 @@ for line in sys.stdin:
                 articleid+=1
                 topicid=0
                 title=title_re.search(page).group(1)
-                #print 'title',repr(title)
                 xmlpage=etree.Element('page',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8),title=title,url='https://'+lang+'.wikipedia.org/wiki/'+title.replace(' ','_'))
                 xmlroot.append(xmlpage)
                 text=pattern.group(1)
@@ -76,7 +75,14 @@ for line in sys.stdin:
                             pars=[]                            
                         topicid+=1
                         commentid=0
-                        xmltopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8),title=link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',line.strip('= '))))
+                        xmltopic=etree.Element('topic',id='janes.wikipedia.'+sys.argv[1]+'.'+str(articleid).zfill(8)+'.'+str(topicid).zfill(8))
+                        title=link2_re.sub(r'<a href="\1">\1</a>',link_re.sub(r'<a href="\1">\2</a>',line.strip('= ')))
+                        xmltitle=etree.Element('title')
+                        #try:
+                        xmltopic.append(etree.fromstring('<title>'+title+'</title>'))
+                        #except:
+                        #    xmltitle.text=title
+                        #xmltopic.append(xmltitle)
                         xmlpage.append(xmltopic)
                         currenttopic=xmltopic
                         continue
